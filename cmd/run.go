@@ -1,16 +1,16 @@
 package main
 
 import (
-	"image"
 	"image/color"
 	"math/rand"
 
-	"github.com/frasmataz/p5"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 type ScreenSettings struct {
-	height int
-	width  int
+	width  int32
+	height int32
+	fps    int32
 }
 
 type Config struct {
@@ -21,12 +21,13 @@ type Config struct {
 type Object struct {
 	x      int
 	y      int
-	colour color.NRGBA
+	colour color.RGBA
 }
 
 type State struct {
-	objects []Object
-	config  Config
+	config      Config
+	objects     []Object
+	framebuffer rl.Texture2D
 }
 
 var state State
@@ -36,23 +37,33 @@ func main() {
 		config: Config{
 			initObjectCount: 500000,
 			screen: ScreenSettings{
-				1024,
-				1024,
+				width:  1000,
+				height: 1000,
+				fps:    60,
 			},
 		},
 	}
-	p5.Run(setup, draw)
-}
 
-func setup() {
+	rl.InitWindow(
+		state.config.screen.width,
+		state.config.screen.height,
+		"particles",
+	)
+	rl.SetTargetFPS(state.config.screen.fps)
 
-	p5.Canvas(state.config.screen.width, state.config.screen.height)
+	state.framebuffer = rl.LoadTextureFromImage(
+		rl.GenImageColor(
+			int(state.config.screen.width),
+			int(state.config.screen.height),
+			rl.Black,
+		),
+	)
 
-	for _ = range state.config.initObjectCount {
+	for range state.config.initObjectCount {
 		state.objects = append(state.objects, Object{
-			x: rand.Intn(state.config.screen.width),
-			y: rand.Intn(state.config.screen.height),
-			colour: color.NRGBA{
+			x: rand.Intn(int(state.config.screen.width)),
+			y: rand.Intn(int(state.config.screen.height)),
+			colour: color.RGBA{
 				uint8(rand.Intn(255)),
 				uint8(rand.Intn(255)),
 				uint8(rand.Intn(255)),
@@ -61,35 +72,26 @@ func setup() {
 		})
 	}
 
+	for !rl.WindowShouldClose() {
+		draw()
+	}
 }
 
 func draw() {
 
-	image := image.NewNRGBA(
-		image.Rectangle{
-			image.Point{
-				0,
-				0,
-			},
-			image.Point{
-				state.config.screen.width,
-				state.config.screen.height,
-			},
-		},
-	)
+	pixels := make([]color.RGBA, state.config.screen.width*state.config.screen.height)
 
 	for _, object := range state.objects {
 
-		image.SetNRGBA(
-			object.x,
-			object.y,
-			object.colour,
-		)
+		pixels[object.y*int(state.config.screen.width)+object.x] = color.RGBA(object.colour)
 
 	}
 
-	p5.DrawImage(
-		image,
-		0, 0,
-	)
+	rl.BeginDrawing()
+
+	rl.UpdateTexture(state.framebuffer, pixels)
+	rl.DrawTexture(state.framebuffer, 0, 0, rl.White)
+
+	rl.EndDrawing()
+
 }
