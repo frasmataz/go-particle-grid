@@ -101,3 +101,25 @@ func (q *Quadtree) Draw() {
 		}
 	}
 }
+
+func (q *Quadtree) Query(target rl.Rectangle) []*Object {
+	var result []*Object
+
+	if !rl.CheckCollisionRecs(q.Bounds, target) {
+		return result
+	}
+
+	for _, object := range q.Objects {
+		if rl.CheckCollisionPointRec(object.Pos, target) {
+			result = append(result, object)
+		}
+	}
+
+	if q.Divided {
+		for _, node := range q.Nodes {
+			result = append(result, node.Query(target)...)
+		}
+	}
+
+	return result
+}

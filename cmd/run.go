@@ -95,7 +95,8 @@ func draw() {
 		qt.Insert(&object)
 	}
 
-	qt.Draw()
+	sampleRect := rl.NewRectangle(200, 200, 200, 200)
+	collidedPoints := qt.Query(sampleRect)
 
 	size := state.config.screen.rect.ToInt32().Width * state.config.screen.rect.ToInt32().Height
 	pixels := make([]color.RGBA, size)
@@ -109,10 +110,21 @@ func draw() {
 
 	}
 
+	for _, object := range collidedPoints {
+		index := (int(object.Pos.Y) * int(state.config.screen.rect.Width)) + int(object.Pos.X)
+
+		if index >= 0 && index < int(size) {
+			pixels[index] = rl.Green
+		}
+
+	}
+
 	rl.BeginDrawing()
 
 	rl.UpdateTexture(state.framebuffer, pixels)
 	rl.DrawTexture(state.framebuffer, 0, 0, rl.White)
+	qt.Draw()
+	rl.DrawRectangleLinesEx(sampleRect, 2.0, rl.Green)
 
 	rl.EndDrawing()
 
