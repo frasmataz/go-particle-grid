@@ -7,7 +7,9 @@ import (
 )
 
 type Object struct {
+	Id     int
 	Pos    rl.Vector2
 	Vel    rl.Vector2
 	Colour color.RGBA
+	Mass   float32
 }
